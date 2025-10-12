@@ -1,6 +1,8 @@
-import msal
+import json
 import sys
-import os
+
+import msal
+import requests
 
 # -------------------------------------------------------------------------
 # Configuration: Replace these placeholders with your actual Azure AD app info
@@ -84,6 +86,63 @@ def acquire_outlook_token_interactive(client_id: str, authority: str, scope: lis
         error_code = result.get("error")
         print(f"Error Code: {error_code}\nDescription: {error_description}", file=sys.stderr)
         return None
+
+
+def read_latest_email(access_token: str):
+    """
+    Calls the Microsoft Graph API to fetch the latest email in the user's inbox.
+    Requires the Mail.Read scope.
+    """
+    print("\n--- FETCHING LATEST EMAIL ---")
+
+    # Base URL for Microsoft Graph API
+    graph_url = "https://graph.microsoft.com/v1.0/me/messages"
+
+    # Headers containing the access token
+    headers = {
+        'Authorization': f'Bearer {access_token}',
+        'Content-Type': 'application/json'
+    }
+
+    # Query parameters to fetch only the top 1 message, ordered by newest first
+    params = {
+        '$top': 1,
+        '$orderby': 'receivedDateTime desc',
+        '$select': 'subject,from,receivedDateTime,bodyPreview'  # Only fetch useful fields
+    }
+
+    try:
+        response = requests.get(graph_url, headers=headers, params=params)
+        response.raise_for_status()  # Raise an HTTPError for bad responses (4xx or 5xx)
+
+        email_data = response.json()
+
+        # Check if any messages were returned
+        if not email_data.get('value'):
+            print("Inbox is empty or no messages were found.")
+            return
+
+        latest_message = email_data['value'][0]
+
+        print(f"Subject: {latest_message.get('subject', 'No Subject')}")
+        print(
+            f"From: {latest_message.get('from', {}).get('emailAddress', {}).get('address', 'Unknown Sender')}")
+        print(f"Received: {latest_message.get('receivedDateTime')}")
+        print(f"Body Preview: {latest_message.get('bodyPreview', 'N/A')}")
+
+    except requests.exceptions.HTTPError as e:
+        print(
+            f"ERROR: Failed to read email (HTTP {response.status_code}). Check your permissions (Mail.Read).",
+            file=sys.stderr)
+        try:
+            # Try to print the detailed error from the response body
+            error_details = response.json().get('error', {})
+            print(f"Graph Error: {error_details.get('code')}", file=sys.stderr)
+            print(f"Message: {error_details.get('message')}", file=sys.stderr)
+        except json.JSONDecodeError:
+            print("Could not decode error response.", file=sys.stderr)
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred during the API request: {e}", file=sys.stderr)
 
 
 if __name__ == "__main__":

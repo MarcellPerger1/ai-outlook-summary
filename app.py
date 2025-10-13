@@ -11,6 +11,7 @@ import threading
 import time
 import urllib.parse
 from collections.abc import Callable, Hashable
+from datetime import timedelta
 from typing import TypeVar, ParamSpec, Any, NoReturn
 
 import requests
@@ -102,7 +103,7 @@ def diskcache(filename: str = None, key_fn: Callable[P, H] = _default_cache_key,
     return decor
 
 
-@diskcache('.app_cache/topdf_cache.pkl')
+@diskcache('.app_cache/topdf_cache.pkl', lifetime=timedelta(days=30))
 def topdf(html: str) -> bytes:
     return pdfkit.from_string(html, configuration=pdfkit.configuration(
         wkhtmltopdf='C:/Program Files/wkhtmltopdf/bin/wkhtmltopdf.exe'))
@@ -117,7 +118,8 @@ def summ_pdfs(pdfs: list[bytes]):
             'these emails. Put them in order of priority (with the most '
             'important/urgent one at the front of the array). The output '
             'should be JSON conforming to the schema. Ignore any events '
-            f'in the past (today is {datetime.datetime.now().strftime("%d/%m/%Y")}).'
+            f'in the past (today is {datetime.datetime.now().strftime("%d/%m/%Y")}'
+            f', time is {datetime.datetime.now().strftime("%H:%M")}).'
             f'Unless otherwise specified, prioritise academic tasks, such '
             f'as lectures and supervisions.',
             *[genai.types.Part.from_bytes(data=pdf, mime_type='application/pdf')
@@ -444,7 +446,7 @@ def get_email_thread(convid: dict[str, ...]):
     try:
         return resp.json()["Body"]["ResponseMessages"]["Items"][0]["Conversation"]
     except KeyError:
-        writefile('err.json', resp.content)
+        writefile('err.json', resp.content.decode('utf8'))
         raise
 
 

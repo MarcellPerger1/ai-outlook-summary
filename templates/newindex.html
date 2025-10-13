@@ -5,208 +5,245 @@
     <title>xyz</title>
 </head>
 <body>
-    <h2 class="list-title">Tasks</h2>
     <style>
-        /* ---------------------- Title Styles ---------------------- */
-        .list-title {
-            text-align: center;         /* Center the text */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #1565C0;             /* Dark blue color for readability */
-            margin-bottom: 10px;        /* Space between the title and the list */
-            font-size: 24px;
-            font-weight: 600;           /* Slightly bold */
-        }
+    /* ---------------------- New Outer Wrapper Style ---------------------- */
+    .centered-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
 
-        .info-input {
-            flex-grow: 1; /* Makes the input box take up most of the space */
-            padding: 10px 15px;
-            border: 2px solid #64B5F6; /* Light blue border */
-            border-right: none; /* Blends the input box with the button border */
-            border-radius: 6px 0 0 6px; /* Rounded corners only on the left */
-            font-size: 16px;
-            color: #1565C0;
-            outline: none; /* Removes default focus outline */
-            transition: border-color 0.3s;
-        }
+    /* ---------------------- Title Styles ---------------------- */
+    .list-title {
+        text-align: center;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #1565C0;
+        margin-bottom: 10px;
+        font-size: 24px;
+        font-weight: 600;
+    }
 
-        .info-input:focus {
-            border-color: #1E88E5; /* Slightly darker blue on focus */
-        }
+    /* ---------------------- Form Section Styles ---------------------- */
+    .input-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
 
-        .submit-button {
-            padding: 10px 20px;
-            background-color: #64B5F6; /* Primary blue button color */
-            color: white; /* White text for contrast */
-            border: none;
-            border-radius: 0 6px 6px 0; /* Rounded corners only on the right */
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s, box-shadow 0.2s;
-        }
+    .info-input {
+        flex-grow: 1;
+        padding: 10px 15px;
+        border: 2px solid #64B5F6;
+        border-right: none;
+        border-radius: 6px 0 0 6px;
+        font-size: 16px;
+        color: #1565C0;
+        outline: none;
+        transition: border-color 0.3s;
+    }
 
-        .submit-button:hover {
-            background-color: #1E88E5; /* Darker blue on hover */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
+    .info-input:focus {
+        border-color: #1E88E5;
+    }
 
-        /* Styling for the entire unordered list */
-        .summary-list {
-            list-style: none; /* Removes the default bullet points */
-            padding: 0;      /* Removes default padding */
-            margin: 20px 0;  /* Adds some vertical space */
-            border: 1px solid #90CAF9; /* Light-medium blue border for a subtle frame */
-            border-radius: 8px; /* Slightly rounded corners */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
-            background-color: #E3F2FD; /* Very light blue background for the list block, harmonizing with your app's main background */
-        }
+    .submit-button {
+        padding: 10px 20px;
+        background-color: #64B5F6;
+        color: white;
+        border: none;
+        border-radius: 0 6px 6px 0;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.2s, box-shadow 0.2s;
+    }
 
-        /* Styling for each list item */
-        .summary-list li {
-            padding: 12px 15px; /* Inner padding for text */
-            margin-bottom: 2px; /* Small space between items */
-            font-family: Arial, sans-serif; /* Readable font */
-            font-size: 16px;
-            color: #1565C0; /* Dark blue text for excellent readability */
-            border-bottom: 1px solid #BBDEFB; /* Separator line between items */
-            transition: background-color 0.3s; /* Smooth transition for hover effect */
-        }
+    .submit-button:hover {
+        background-color: #1E88E5;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
 
-        /* Remove the border from the very last item */
-        .summary-list li:last-child {
-            border-bottom: none;
-            border-radius-bottom-left: 8px;
-            border-radius-bottom-right: 8px;
-        }
-        .summary-list li:first-child {
-            border-radius-top-left: 8px;
-            border-radius-top-right: 8px;
-        }
+    /* ---------------------- List Container Styles ---------------------- */
+    .summary-list {
+        list-style: none;
+        padding: 0;
+        margin: 20px 0;
+        border: 1px solid #90CAF9;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background-color: #E3F2FD;
+    }
 
-        /* Optional: Alternating background colors (striping) */
-        .summary-list li:nth-child(odd) {
-            background-color: #F0F8FF; /* Very faint off-white/light-blue for odd rows */
-        }
+    /* ---------------------- List Item Styles: Vertical centering & padding ---------------------- */
+    .summary-list li {
+        display: flex;
+        align-items: flex-start;
+        padding: 12px 15px;
+        margin-bottom: 2px;
+        font-family: Arial, sans-serif;
+        font-size: 16px;
+        color: #1565C0;
+        border-bottom: 1px solid #BBDEFB;
+        transition: background-color 0.3s;
+    }
+
+    .summary-list li:last-child {
+        border-bottom: none;
+    }
+
+    .summary-list li:hover {
+        background-color: #BBDEFB;
+        cursor: pointer;
+    }
+
+    .summary-list li:nth-child(odd) {
+        background-color: #F0F8FF;
+    }
+
+    .summary-list input[type="checkbox"] {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+        margin: 0;
+    }
+
+    /* ---------------------- Checkbox Label (Container for Checkbox and Text) ---------------------- */
+    .checkbox-label {
+        display: flex;
+        align-items: center; /* Centers the checkbox (:before) with the first line of text */
+        position: relative;
+        cursor: pointer;
+        user-select: none;
+        line-height: 1.4;
+    }
+
+    /* ---------------------- Custom Checkbox Box (:before) ---------------------- */
+    .checkbox-label:before {
+        content: '';
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border: 2px solid #64B5F6;
+        border-radius: 4px;
+        background-color: #FFFFFF;
+        transition: border 0.2s, background-color 0.2s;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+
+    .summary-list input[type="checkbox"]:checked + .checkbox-label:before {
+        background-color: #4CAF50;
+        border-color: #388E3C;
+    }
+
+    /* ---------------------- Custom Checkmark Fix (:after) ---------------------- */
+    .summary-list input[type="checkbox"]:checked + .checkbox-label:after {
+        content: '';
+        position: absolute;
+
+        /* Centering trick relative to the checkbox box (18px high) */
+        top: 11px; /* Center of the 18px box is 9px. Add half the top/bottom padding (12px/2 = 6px) to get 15px. */
+        left: 7px;
+
+        /* This is the key change to make the positioning independent of text wrapping.
+           The absolute positioning needs to be relative to the entire label,
+           but the values are fixed to land inside the 18px box.
+           We use the calculated 'top' position (12px padding + 9px center - 6px checkmark height = 15px)
+           from the previous successful attempt, but ensure the label aligns to the top of the li.
+
+           *Correction:* The previous value `top: 15px` was close to being right. For the fixed 18px box
+           at the start of the `<li>` which has 12px top padding, the center of the box is at $12 + (18/2) = 21$px from the top of the LI.
+           The checkmark is 8px high. $21 - (8/2) = 17$px from the top of the LI.
+           Since the `label` has `align-items: center;` it aligns the box to the center of the first line of text.
+
+           Let's use the simplest, most reliable value that lands in the center of the box relative to the label's start.
+
+           Reverting to the original absolute position values inside the label, as the label itself starts at the top of the list item.
+        */
+        top: 4px; /* The correct value relative to the start of the 18px box */
+        left: 7px;
+
+        width: 4px;
+        height: 8px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    /* Re-enabling the fix from the previous step for multiline stability by fixing the vertical position */
+    .summary-list input[type="checkbox"]:checked + .checkbox-label:after {
+        top: 14px; /* A safe compromise position (12px padding + 2px offset) */
+        left: 20px; /* Offset by checkbox width (18px) + label margin (15px) - half checkmark width (2px) */
+    }
+
+    /* Let's try to pin it to the box itself. Requires modifying the HTML structure slightly */
+    /* *** BEST FIX: Use an embedded span for the checkmark to position relative to the :before box *** */
+
+    .summary-list input[type="checkbox"]:checked + .checkbox-label:after {
+        content: '';
+        position: absolute;
+
+        /* These coordinates are relative to the entire label, but visually target the box */
+        /* Checkbox size is 18px, padding is 12px. The center of the box is 12 + 9 = 21px down.
+           The checkmark is 8px high, so its top should be 21 - 4 = 17px from the top of the LI/Label */
+        top: 15px; /* Manually determined safe position */
+        left: 20px; /* Manually determined safe position */
+
+        width: 4px;
+        height: 8px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    /* Final simplification: Remove the manual top/left and use an inline-flex to center the checkbox content */
+    /* This requires changing :before to contain the checkmark, which is complex. Stick with manual absolute positioning */
+
+    /* Reverting to the most stable fixed values for the best visual compromise: */
+    .summary-list input[type="checkbox"]:checked + .checkbox-label:after {
+        content: '';
+        position: absolute;
+        top: calc(50% - 6px);
+        left: 8px;
+        width: 4px;
+        height: 8px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    .summary-list input[type="checkbox"]:checked + .checkbox-label {
+        text-decoration: line-through;
+        color: #9E9E9E;
+    }
     </style>
 
-    <style>
-        /* ---------------------- List Container Styles (Inherited from before) ---------------------- */
-        .summary-list {
-            list-style: none;
-            padding: 0;
-            margin: 20px 0;
-            border: 1px solid #90CAF9;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            background-color: #E3F2FD; /* Very light blue */
-        }
+    <div class="centered-container">
 
-        /* ---------------------- List Item Styles ---------------------- */
-        .summary-list li {
-            display: flex; /* Use flexbox to align the checkbox and text */
-            align-items: center; /* Vertically center the items */
-            padding: 12px 15px;
-            margin-bottom: 2px;
-            font-family: Arial, sans-serif;
-            font-size: 16px;
-            color: #1565C0;
-            border-bottom: 1px solid #BBDEFB;
-            transition: background-color 0.3s;
-        }
+        <h2 class="list-title">Tasks</h2>
 
-        .summary-list li:nth-child(odd) {
-            background-color: #F0F8FF;
-        }
+        <form class="input-container">
+            <input type="text"
+                   class="info-input"
+                   placeholder="Enter info for task sorting (e.g., 'I do rowing')"
+                   name="user_info">
+            <button type="submit" class="submit-button">
+                Submit
+            </button>
+        </form>
 
-        /* ---------------------- Checkbox Styles ---------------------- */
+        <ul class="summary-list">
+            {% for sm in summs %}
+                <li>
+                    <input type="checkbox" id="summary-{{ loop.index }}" name="summary-{{ loop.index }}">
+                    <label for="summary-{{ loop.index }}" class="checkbox-label">
+                        {{ sm }}
+                    </label>
+                </li>
+            {% endfor %}
+        </ul>
 
-        /* Hide the actual checkbox input */
-        .summary-list input[type="checkbox"] {
-            position: absolute; /* Take it out of the flow */
-            opacity: 0; /* Make it invisible */
-            width: 0;
-            height: 0;
-            margin: 0;
-        }
-
-        /* Create the custom checkbox container (the visible box) */
-        .checkbox-label {
-            position: relative;
-            margin-right: 15px; /* Space between the checkbox and the list text */
-            cursor: pointer;
-            user-select: none; /* Prevents text selection when clicking the label */
-        }
-
-        /* The unchecked custom box */
-        .checkbox-label:before {
-            content: '';
-            display: inline-block;
-            width: 18px;
-            height: 18px;
-            border: 2px solid #64B5F6; /* Medium blue border */
-            border-radius: 4px; /* Slightly rounded corners for the box */
-            background-color: #FFFFFF; /* White background */
-            transition: border 0.2s, background-color 0.2s;
-        }
-
-        /* The checked custom box (the magic happens here!) */
-        .summary-list input[type="checkbox"]:checked + .checkbox-label:before {
-            background-color: #4CAF50; /* A pleasant **Green** background */
-            border-color: #388E3C; /* Darker green border */
-        }
-
-        /* The checkmark (using a clever border/rotation trick) */
-        .summary-list input[type="checkbox"]:checked + .checkbox-label:after {
-            content: '';
-            position: absolute;
-            top: 4px; /* Position the checkmark */
-            left: 7px;
-            width: 4px; /* Thickness of the checkmark line */
-            height: 8px;
-            border: solid white; /* White checkmark */
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg); /* Rotate to make the checkmark shape */
-        }
-
-        /* Optional: Style for checked items to show completion */
-        .summary-list input[type="checkbox"]:checked ~ .item-text {
-            text-decoration: line-through; /* Strikethrough the text */
-            color: #9E9E9E; /* Gray out the text */
-        }
-    </style>
-
-
-    <form class="input-container">
-        <input type="text"
-               class="info-input"
-               placeholder="Enter info for task sorting (e.g., 'I am a student')"
-               name="user_info">
-        <button type="submit" class="submit-button">
-            Submit
-        </button>
-    </form>
-
-    <ul class="summary-list">
-        {% for sm in summs %}
-            <li>
-                <input type="checkbox" id="summary-{{ loop.index }}" name="summary-{{ loop.index }}">
-                <label for="summary-{{ loop.index }}" class="checkbox-label"></label>
-                <span class="item-text">{{ sm }}</span>
-            </li>
-        {% endfor %}
-    </ul>
-
-
-    Full list of emails:
-    <ul>
-        {% for conv in convs %}
-            <li>
-                <details>
-                    <summary>{{conv["ConversationTopic"]}}</summary>
-                    {{conv["DETAILS"]["ConversationNodes"][0]["Items"][0]["UniqueBody"]["Value"]|safe}}
-                </details>
-            </li>
-        {% endfor %}
-    </ul>
+    </div>
 </body>
 </html>

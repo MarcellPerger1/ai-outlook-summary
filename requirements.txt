@@ -3,3 +3,5 @@ Flask>=2.2
 requests>=2,<3
 ms_identity_python[flask] @ git+https://github.com/azure-samples/ms-identity-python@0.9
 python-dotenv
+google-genai
+pdfkit

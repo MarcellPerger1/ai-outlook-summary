@@ -72,8 +72,8 @@ def fetch(url, conf: dict[str, ...]) -> requests.Response:
         headers=conf.get('headers'), data=conf.get('body'))
 
 
-def writefile(fnm: str, data: str):
-    with open(fnm, 'w', encoding='utf8') as f:
+def writefile(filename: str, data: str):
+    with open(filename, 'w', encoding='utf8') as f:
         f.write(data)
 
 

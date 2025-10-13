@@ -263,11 +263,11 @@
         <form hidden id="dummy-reset-form"></form>
 
         <ul class="summary-list">
-            {% for sm in summs %}
+            {% for task in tasklist %}
                 <li>
                     <input type="checkbox" id="summary-{{ loop.index }}" name="summary-{{ loop.index }}">
                     <label for="summary-{{ loop.index }}" class="checkbox-label">
-                        {{ sm }}
+                        {{ task }}
                     </label>
                 </li>
             {% endfor %}

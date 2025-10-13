@@ -1,4 +1,4 @@
-"""App to sort emails by """
+"""App to sort emails by the user's priorities and deadlines"""
 import concurrent.futures
 import datetime
 import json
@@ -62,9 +62,10 @@ def get_emails():
     print('Retrieving emails...')
     conversations = get_emails_raw()['Body']['Conversations']
     with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:  # 6 = emulate browsers
-        ops = [*ex.map(handle_single_conversation, conversations)]
-    for dest, val in ops:
-        dest['DETAILS'] = val  # can't do it on different thread due to pickle issues??
+        conv_body_pairs = [*ex.map(handle_single_conversation, conversations)]
+    for conversation, details in conv_body_pairs:
+        # can't do it on different thread due to pickle issues??
+        conversation['DETAILS'] = details
     return [get_html_from_email(c) for c in conversations]
 
 
@@ -183,7 +184,7 @@ def get_emails_raw():
             "method": "POST",
             "mode": "cors"
         })
-    if not (200 <= resp_obj.status_code < 300):
+    if not resp_obj.ok:
         need_reauth()
     try:
         resp = resp_obj.json()
@@ -376,7 +377,7 @@ def get_email_thread(conversation_id: dict[str, ...]):
             "method": "POST",
             "mode": "cors"
         })
-    if resp.status_code > 299:
+    if not resp.ok:
         raise ApiError(resp)
     try:
         return resp.json()["Body"]["ResponseMessages"]["Items"][0]["Conversation"]
@@ -450,7 +451,7 @@ def index():
     if info := request.args.get('user_info'):
         if HAS_INITIAL_CHAT_MSG:
             tasklist = update_tasklist(info)
-            return render_template('index.html', summs=tasklist)
+            return render_template('index.html', tasklist=tasklist)
         else:
             return redirect('/')  # It doesn't have the emails yet
     print('Initialising...')
@@ -459,4 +460,4 @@ def index():
     print('Converting documents to PDF...')
     pdfs = [html_to_pdf(mail) for mail in emails]
     tasklist = tasklist_from_pdfs(pdfs)
-    return render_template('index.html', summs=tasklist)
+    return render_template('index.html', tasklist=tasklist)

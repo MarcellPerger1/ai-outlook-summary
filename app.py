@@ -559,7 +559,7 @@ def newindex():
         ops = [*ex.map(handle_single_conv, convs)]
     for dest, val in ops:
         dest['DETAILS'] = val  # can't do it on different thread due to pickle issues??
-    writefile('_temp.txt', repr(convs))
+    writefile('_exclude/_temp.txt', repr(convs))
     # json.dump(convs, sys.stderr, indent=2)
     emails = [conv["DETAILS"]["ConversationNodes"][0]["Items"][0]
               ["UniqueBody"]["Value"] for conv in convs]

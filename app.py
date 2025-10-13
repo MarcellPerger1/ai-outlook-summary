@@ -16,7 +16,7 @@ from typing import TypeVar, ParamSpec, Any, NoReturn
 
 import requests
 from dotenv import load_dotenv
-from flask import Flask, Response, render_template
+from flask import Flask, Response, render_template, request, redirect
 from google import genai
 import pdfkit
 # noinspection PyPackageRequirements
@@ -42,7 +42,7 @@ auth = Auth(
 
 load_dotenv()
 app = Flask(__name__)
-genai_client = genai.Client()
+genai_client = genai.Client()  # TODO: is lite enuf 4 dis
 chat = genai_client.chats.create(model='gemini-2.5-flash')  # meow!
 
 T = TypeVar('T', bound=Callable)
@@ -109,8 +109,13 @@ def topdf(html: str) -> bytes:
         wkhtmltopdf='C:/Program Files/wkhtmltopdf/bin/wkhtmltopdf.exe'))
 
 
-@diskcache('.app_cache/summ_pdfs.pkl', lambda mails: tuple(mails))
+HAS_INITIAL = False
+
+
+# We can't cache this as we need the chat context
+# @diskcache('.app_cache/summ_pdfs.pkl', lambda mails: tuple(mails))
 def summ_pdfs(pdfs: list[bytes]):
+    global HAS_INITIAL
     print('Summarising tasks...')
     res = chat.send_message(
         [
@@ -133,16 +138,10 @@ def summ_pdfs(pdfs: list[bytes]):
             }
         }, response_mime_type='application/json')
     )
-    print(res.candidates)
-    print(res)
+    # print(res.candidates)
+    # print(res)
+    HAS_INITIAL = True
     return res.parsed
-
-
-def summ_emails(mails: list[str]):
-    # TODO: is lite enuf 4 dis
-    print('Converting documents to PDF...')
-    pdfs = [topdf(mail) for mail in mails]
-    return summ_pdfs(pdfs)
 
 
 class ApiError(Exception):
@@ -523,13 +522,40 @@ def handle_single_conv(conv: dict):
     return conv, get_email_thread(convid=conv['ConversationId'])
 
 
+def newinfo(info: str):
+    print('Updating list...')
+    res = chat.send_message(
+        f"The user has provided new information: {info}. "
+        f"Please reorder the list based on this new information, "
+        f"also removing any items that are completely irrelevant"
+        f" to the user (for example, if the user doesn't care"
+        f" about music, don't include anything related to music,"
+        f" unless explicitly unequivocally compulsory)",
+        config=genai.types.GenerateContentConfig(
+            response_schema={
+                "type": "ARRAY",
+                "items": {
+                    "type": "STRING"
+                }
+            }, response_mime_type='application/json'
+        )
+    )
+    return res.parsed
+
+
 @app.route('/newindex')
 def newindex():
+    if info := request.args.get('user_info'):
+        if HAS_INITIAL:
+            summs = newinfo(info)
+            return render_template('newindex.html', summs=summs)
+        else:
+            return redirect('/newindex')
     print('Initialising...')
     init_office_maybe()
     print('Retrieving emails...')
     convs = get_email()['Body']['Conversations']
-    with concurrent.futures.ThreadPoolExecutor() as ex:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:  # 6 = emulate browsers
         ops = [*ex.map(handle_single_conv, convs)]
     for dest, val in ops:
         dest['DETAILS'] = val  # can't do it on different thread due to pickle issues??
@@ -537,11 +563,7 @@ def newindex():
     # json.dump(convs, sys.stderr, indent=2)
     emails = [conv["DETAILS"]["ConversationNodes"][0]["Items"][0]
               ["UniqueBody"]["Value"] for conv in convs]
-    summs = summ_emails(emails)
+    print('Converting documents to PDF...')
+    pdfs = [topdf(mail) for mail in emails]
+    summs = summ_pdfs(pdfs)
     return render_template('newindex.html', convs=convs, summs=summs)
-
-
-@app.route('/extra_info')
-def extra_info():
-
-    ...

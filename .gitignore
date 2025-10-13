@@ -1,4 +1,7 @@
 flask_session/
+_exclude/
+# pickled caches
+.app_cache/
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,pycharm,flask
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,pycharm,flask

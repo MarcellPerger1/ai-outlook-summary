@@ -19,34 +19,14 @@ from dotenv import load_dotenv
 from flask import Flask, Response, render_template, request, redirect
 from google import genai
 import pdfkit
-# noinspection PyPackageRequirements
-from identity.flask import Auth
-
-app = Flask(__name__)
-app.config.from_mapping(SESSION_TYPE="filesystem")
-auth = Auth(
-    app,
-    authority=os.getenv("AUTHORITY"),
-    client_id=os.getenv("OWA_CLIENTID"),
-    client_credential=os.getenv("CLIENT_SECRET"),
-    redirect_uri=os.getenv("REDIRECT_URI"),
-    oidc_authority=os.getenv("OIDC_AUTHORITY"),
-    b2c_tenant_name=os.getenv('B2C_TENANT_NAME'),
-    b2c_signup_signin_user_flow=os.getenv('SIGNUPSIGNIN_USER_FLOW'),
-    b2c_edit_profile_user_flow=os.getenv('EDITPROFILE_USER_FLOW'),
-    b2c_reset_password_user_flow=os.getenv('RESETPASSWORD_USER_FLOW'),
-)
-
-# TODO: ready this crappy code for the code review!!!!!!!!!!!!
 
 
 load_dotenv()
 app = Flask(__name__)
-genai_client = genai.Client()  # TODO: is lite enuf 4 dis
+genai_client = genai.Client()  # TODO: if lite no enuf 4 dis, change here vvv
 chat = genai_client.chats.create(model='gemini-2.5-flash')  # meow!
 
-T = TypeVar('T', bound=Callable)
-# I can't believe this was added as early as 3.10 - it feels like such a 3.13 thing
+# I can't believe ParamSpec was added as early as 3.10 - it feels like such a 3.13 thing
 P = ParamSpec('P')
 R = TypeVar('R')
 H = TypeVar('H', bound=Hashable)
@@ -103,20 +83,26 @@ def diskcache(filename: str = None, key_fn: Callable[P, H] = _default_cache_key,
     return decor
 
 
+class ApiError(Exception):
+    def __init__(self, o: object):
+        super().__init__(json.dumps(o, indent=2))
+
+
 @diskcache('.app_cache/topdf_cache.pkl', lifetime=timedelta(days=30))
 def topdf(html: str) -> bytes:
     return pdfkit.from_string(html, configuration=pdfkit.configuration(
         wkhtmltopdf='C:/Program Files/wkhtmltopdf/bin/wkhtmltopdf.exe'))
 
 
-HAS_INITIAL = False
+HAS_INITIAL_CHAT_MSG = False
 
 
 # We can't cache this as we need the chat context
 # @diskcache('.app_cache/summ_pdfs.pkl', lambda mails: tuple(mails))
 def summ_pdfs(pdfs: list[bytes]):
-    global HAS_INITIAL
+    global HAS_INITIAL_CHAT_MSG, chat  # not good practise but it's late.
     print('Summarising tasks...')
+    chat = genai_client.chats.create(model='gemini-2.5-flash')  # meow!
     res = chat.send_message(
         [
             'Summarise the tasks the the user needs to perform based on '
@@ -138,15 +124,8 @@ def summ_pdfs(pdfs: list[bytes]):
             }
         }, response_mime_type='application/json')
     )
-    # print(res.candidates)
-    # print(res)
-    HAS_INITIAL = True
+    HAS_INITIAL_CHAT_MSG = True
     return res.parsed
-
-
-class ApiError(Exception):
-    def __init__(self, o: object):
-        super().__init__(json.dumps(o, indent=2))
 
 
 def need_reauth() -> NoReturn:
@@ -156,7 +135,7 @@ def need_reauth() -> NoReturn:
 
 
 def get_email():
-    resp_obj = fetch(
+    resp_obj = fetch(  # Mainly copy-paste from devtools
         "https://outlook.office.com/owa/service.svc?action=FindConversation&app=Mail&n=5", {
             "credentials": "include",
             "headers": {
@@ -167,12 +146,14 @@ def get_email():
                 # TODO: generate this? finding client_id from the OWA using devtools hacks
                 "authorization": f"Bearer {os.getenv('OWA_BEARER')}",
                 "content-type": "application/json; charset=utf-8",
-                "ms-cv": f"{os.getenv('OWA_LS_MS_CV')}",  # this
+                "ms-cv": f"{os.getenv('OWA_LS_MS_CV')}",
                 "prefer": "IdType=\"ImmutableId\", exchange.behavior=\"IncludeThirdPartyOnlineMeetingProviders\"",
-                # TODO: is this constant? is it to be kept private? I'll just be safe for now.
                 "x-anchormailbox": f"PUID:{os.getenv('OWA_PUID')}",
                 "x-owa-correlationid": f"{os.getenv('OWA_LS_CORRELATIONID')}",
                 "x-owa-hosted-ux": "false",
+                # TODO: this works in mysterious ways (JS client generates it
+                #  randomly and registers it woth server? we attempt to emulate
+                #  this in init_office()
                 "x-owa-sessionid": f"{os.getenv('OWA_SESSIONID')}",
                 "x-owa-urlpostdata": urllib.parse.quote(json.dumps({
                     "__type": "FindConversationJsonRequest:#Exchange",
@@ -272,7 +253,7 @@ def get_email():
 # dicts aren't hashable (me sad...) so we use this homemade function
 @diskcache('.app_cache/email_thread_cache.pkl', lambda convid: convid['Id'])
 def get_email_thread(convid: dict[str, ...]):
-    resp = fetch(
+    resp = fetch(  # Once again, mainly copy-paste from devtools
         "https://outlook.office.com/owa/service.svc?action=GetConversationItems&app=Mail&n=22",
         {
             "credentials": "include",
@@ -455,13 +436,6 @@ def fetch(url, conf: dict[str, ...]) -> requests.Response:
         headers=conf.get('headers'), data=conf.get('body'))
 
 
-# print(json.dumps(get_email(), indent=2))
-# print(json.dumps(get_email_thread({
-#     "__type": "ItemId:#Exchange",
-#     "Id": "AAQkADAzODA5NzA3LWI3NTEtNDAxMC04MmMwLWNjNTgwNDgyNjI4MgAQAIzt+4oi7kBCsOu4qGn3LMU="
-# }), indent=2))
-
-
 def get_html_from_email(conv: dict[str, Any]):
     # TODO: handle multiple messages in one thread
     nodes = conv["DETAILS"]["ConversationNodes"]
@@ -476,17 +450,12 @@ def get_html_from_email(conv: dict[str, Any]):
     return body_obj["Value"]
 
 
-@app.route('/')
-def index():
-    return Response(json.dumps(get_email()), mimetype='application/json')
-
-
 def writefile(fnm: str, data: str):
     with open(fnm, 'w', encoding='utf8') as f:
         f.write(data)
 
 
-def init_office_maybe():
+def init_office():
     fetch("https://outlook.office.com/owa/startupdata.ashx?app=Mail&n=0", {
         "credentials": "include",
         "headers": {
@@ -518,11 +487,7 @@ def init_office_maybe():
     })
 
 
-def handle_single_conv(conv: dict):
-    return conv, get_email_thread(convid=conv['ConversationId'])
-
-
-def newinfo(info: str):
+def update_list(info: str):
     print('Updating list...')
     res = chat.send_message(
         f"The user has provided new information: {info}. "
@@ -530,7 +495,8 @@ def newinfo(info: str):
         f"also removing any items that are completely irrelevant"
         f" to the user (for example, if the user doesn't care"
         f" about music, don't include anything related to music,"
-        f" unless explicitly unequivocally compulsory)",
+        f" unless explicitly unequivocally compulsory). If not action needs"
+        f" to be taken, you should omit that item completely.",
         config=genai.types.GenerateContentConfig(
             response_schema={
                 "type": "ARRAY",
@@ -543,27 +509,33 @@ def newinfo(info: str):
     return res.parsed
 
 
-@app.route('/newindex')
-def newindex():
-    if info := request.args.get('user_info'):
-        if HAS_INITIAL:
-            summs = newinfo(info)
-            return render_template('newindex.html', summs=summs)
-        else:
-            return redirect('/newindex')
-    print('Initialising...')
-    init_office_maybe()
+def handle_single_conv(conv: dict):
+    return conv, get_email_thread(convid=conv['ConversationId'])
+
+
+def get_emails():
     print('Retrieving emails...')
     convs = get_email()['Body']['Conversations']
     with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:  # 6 = emulate browsers
         ops = [*ex.map(handle_single_conv, convs)]
     for dest, val in ops:
         dest['DETAILS'] = val  # can't do it on different thread due to pickle issues??
-    writefile('_exclude/_temp.txt', repr(convs))
-    # json.dump(convs, sys.stderr, indent=2)
-    emails = [conv["DETAILS"]["ConversationNodes"][0]["Items"][0]
-              ["UniqueBody"]["Value"] for conv in convs]
+    return [conv["DETAILS"]["ConversationNodes"][0]["Items"][0]
+            ["UniqueBody"]["Value"] for conv in convs]
+
+
+@app.route('/')
+def index():
+    if info := request.args.get('user_info'):
+        if HAS_INITIAL_CHAT_MSG:
+            summs = update_list(info)
+            return render_template('index.html', summs=summs)
+        else:
+            return redirect('/')  # It doesn't have the emails yet
+    print('Initialising...')
+    init_office()
+    emails = get_emails()
     print('Converting documents to PDF...')
     pdfs = [topdf(mail) for mail in emails]
     summs = summ_pdfs(pdfs)
-    return render_template('newindex.html', convs=convs, summs=summs)
+    return render_template('index.html', summs=summs)

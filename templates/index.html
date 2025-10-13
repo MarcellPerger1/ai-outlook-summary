@@ -2,15 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>xyz</title>
-</head>
-<body>
+    <title>Outlook Summariser</title>
     <style>
     /* ---------------------- New Outer Wrapper Style ---------------------- */
     .centered-container {
         max-width: 1200px;
         margin: 0 auto;
         padding: 20px;
+        padding-top: 0px;
     }
 
     /* ---------------------- Title Styles ---------------------- */
@@ -19,7 +18,8 @@
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         color: #1565C0;
         margin-bottom: 10px;
-        font-size: 24px;
+        margin-top: 0px;
+        font-size: 52px;
         font-weight: 600;
     }
 
@@ -63,6 +63,24 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
 
+    .reset-button {
+        margin-left: 16px;
+        padding: 10px 20px;
+        background-color: #64B5F6;
+        color: white;
+        border: none;
+        border-radius: 6px 6px 6px 6px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.2s, box-shadow 0.2s;
+    }
+
+    .reset-button:hover {
+        background-color: #1E88E5;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
     /* ---------------------- List Container Styles ---------------------- */
     .summary-list {
         list-style: none;
@@ -98,6 +116,11 @@
 
     .summary-list li:nth-child(odd) {
         background-color: #F0F8FF;
+    }
+
+    /* NEW: Specific hover rule for ODD rows (fixes specificity issue) */
+    .summary-list li:nth-child(odd):hover {
+        background-color: #BBDEFB; /* Apply the same hover color */
     }
 
     .summary-list input[type="checkbox"] {
@@ -218,10 +241,10 @@
         color: #9E9E9E;
     }
     </style>
-
+</head>
+<body>
     <div class="centered-container">
-
-        <h2 class="list-title">Tasks</h2>
+        <h1 class="list-title">Outlook tasks</h1>
 
         <form class="input-container">
             <input type="text"
@@ -233,7 +256,11 @@
             <button type="submit" class="submit-button">
                 Submit
             </button>
+            <button type="submit" class="reset-button" form="dummy-reset-form">
+                Reset
+            </button>
         </form>
+        <form hidden id="dummy-reset-form"></form>
 
         <ul class="summary-list">
             {% for sm in summs %}

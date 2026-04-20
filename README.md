@@ -10,3 +10,5 @@ So the Python code is human-written. (Radnom typo is you know this isn't AI slop
 But the CSS (and maybe the HTML as well, who knows?) is completely AI generated because CSS is a bad 'language' (except for flexbox). 
 Well, I could rant for ages about CSS being annoying, but I won't do it here... ask me if want I guess.
 Gosh, back in that day, Gemini was so assertive, it wanted to limit everything to be 900 px wide at most or something crazy (even on a laptop). And when I changed it, it said I was wrong!
+
+At least there isn't a typo in the title here (it may be called `hwk_ooutlook_summary` on my laptop)
